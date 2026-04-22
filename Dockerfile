@@ -1,22 +1,17 @@
-# Build stage
-FROM eclipse-temurin:21-jdk-alpine AS build
+# Get the base JAVA imag
+FROM eclipse-temurin:21-jdk-jammy
+
+# Create working directory
 WORKDIR /app
+
+# Copy the project files to the container
 COPY . .
-RUN chmod +x mvnw && ./mvnw clean package -DskipTests -B
 
-# Run stage - alpine has significantly fewer CVEs than ubuntu/jammy
-FROM eclipse-temurin:21-jre-alpine
-WORKDIR /app
+# Install laibries with maven
+RUN chmod +x mvnw && ./mvnw clean install -DskipTests
 
-# Pull latest security patches for OS libraries
-RUN apk update && apk upgrade --no-cache
+# Expose the application port
+EXPOSE 8090
 
-# Create a non-root user for security (Alpine uses addgroup/adduser instead of groupadd/useradd)
-RUN addgroup -S devsecops && adduser -S -G devsecops devsecops
-USER devsecops
+ENTRYPOINT [ "sh" , "-c", "java -jar target/*.jar" ]
 
-# Copy only the built artifact
-COPY --from=build /app/target/*.jar app.jar
-
-EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
