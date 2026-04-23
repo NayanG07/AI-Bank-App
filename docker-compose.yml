@@ -1,45 +1,80 @@
 version: "1.0"
 
+# ============================================================
+# AI BankApp - Docker Compose Configuration
+# Services: MySQL 8.0 | Spring Boot App | Ollama AI Engine
+# Network: bankapp-nw (bridge)
+# ============================================================
+
 services:
+
+  # ------------------------------------------------------------
+  # MySQL 8.0 - Relational Database
+  # ------------------------------------------------------------
   mysql:
     image: mysql:8.0
     container_name: mysql
     environment:
-      MYSQL_ROOT_PASSWORD : Test@123
-      MYSQL_DATABASE : bankappdb
+      MYSQL_ROOT_PASSWORD: Test@123   # Root password for MySQL server
+      MYSQL_DATABASE: bankappdb       # Auto-created database on first startup
     healthcheck:
-      # mysqladmin ping returns 0 if the server is running
+      # Waits until MySQL is fully ready before allowing dependent services to start
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-pTest@123"]
-      interval: 10s       # Time between checks
-      timeout: 5s        # Time to wait for a response
-      retries: 5         # Number of failures before marking "unhealthy"
-      start_period: 30s
+      interval: 10s      # Check every 10 seconds
+      timeout: 5s        # Fail if no response within 5 seconds
+      retries: 5         # Mark unhealthy after 5 consecutive failures
+      start_period: 30s  # Give MySQL 30s to initialize before health checks begin
     volumes:
-      - mysql-data:/var/lib/mysql
+      - mysql-data:/var/lib/mysql   # Persist database data across container restarts
     ports:
-      - "3306:3306"
-    networks: 
-      - bankapp-nw
+      - "3306:3306"   # Expose MySQL port to host (host:container)
+    networks:
+      - bankapp-nw    # Connect to shared application network
 
+  # ------------------------------------------------------------
+  # BankApp - Spring Boot Backend (Java 21)
+  # ------------------------------------------------------------
   bankapp:
-    build: .
+    image: nayuu/ai-bankapp           # Pre-built image from Docker Hub
     container_name: bankapp
     ports:
-      - "8090:8090"
+      - "8090:8090"   # Expose app port to host (host:container)
     environment:
-      MYSQL_HOST : mysql
-      MYSQL_PORT : 3306 
-      MYSQL_DATABASE : bankappdb
-      MYSQL_USER : root
-      MYSQL_PASSWORD : Test@123
+      MYSQL_HOST: mysql               # Service name used as hostname inside Docker network
+      MYSQL_PORT: 3306                # MySQL port inside the container network
+      MYSQL_DATABASE: bankappdb       # Database name the app connects to
+      MYSQL_USER: root                # Database username
+      MYSQL_PASSWORD: Test@123        # Database password
+      OLLAMA_URL: http://ollama:11434 # AI engine URL using Ollama service name as hostname
     depends_on:
-      mysql :
-        condition : service_healthy
+      mysql:
+        condition: service_healthy    # Only start after MySQL passes health check
     networks:
-      - bankapp-nw
+      - bankapp-nw    # Connect to shared application network
+
+  # ------------------------------------------------------------
+  # Ollama - Local AI Engine
+  # ------------------------------------------------------------
+  ollama:
+    image: ollama/ollama
+    container_name: ollama
+    ports:
+      - "11434:11434"  # Expose Ollama API port to host (host:container)
+    networks:
+      - bankapp-nw     # Connect to shared application network
+    volumes:
+      - ollama-data:/root/.ollama   # Persist downloaded AI models across container restarts
+
+# ------------------------------------------------------------
+# Networks
+# ------------------------------------------------------------
 networks:
   bankapp-nw:
-    driver : bridge
+    driver: bridge
 
+# ------------------------------------------------------------
+# Volumes
+# ------------------------------------------------------------
 volumes:
-  mysql-data: 
+  mysql-data:    # Stores MySQL database files
+  ollama-data:   # Stores Ollama downloaded AI models (e.g. tinyllama)
