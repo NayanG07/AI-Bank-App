@@ -13,4 +13,5 @@ jobs:
         uses: ./.github/workflows/security_scan.yml
 
     dependency_check:
+        needs: secrity_scan
         uses: ./.github/workflows/dependency_check.yml
