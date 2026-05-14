@@ -4,14 +4,13 @@ on:
     workflow_dispatch:
 
 jobs:
-
     code_quality:
         uses: ./.github/workflows/code_quality.yml
 
-    secrity_scan:
+    security_scan: 
         needs: code_quality
         uses: ./.github/workflows/security_scan.yml
 
     dependency_check:
-        needs: secrity_scan
+        needs: security_scan 
         uses: ./.github/workflows/dependency_check.yml
