@@ -1,7 +1,7 @@
 name: Secrates Scan
 
 on: 
-  workflow_dispatch:
+  workflow_call:
 
 jobs:
     secrates_scan:
