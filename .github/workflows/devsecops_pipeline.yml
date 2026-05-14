@@ -7,10 +7,10 @@ jobs:
     code_quality:
         uses: ./.github/workflows/code_quality.yml
 
-    security_scan: 
+    secrates_scan: 
         needs: code_quality
-        uses: ./.github/workflows/security_scan.yml
+        uses: ./.github/workflows/secrates_scan.yml
 
     dependency_check:
-        needs: security_scan 
+        needs: secrates_scan 
         uses: ./.github/workflows/dependency_check.yml
