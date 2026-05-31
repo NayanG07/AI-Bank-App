@@ -8,3 +8,4 @@ data:
     MYSQL_HOST: mysql-service               # Service name used as hostname inside Docker network
     MYSQL_PORT: "3306"              # MySQL port inside the container network
     MYSQL_USER: root
+    OLLAMA_URL: http://ollama-service:11434
